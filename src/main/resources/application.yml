@@ -1,0 +1,49 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+      - id: EMPLOYEE-SERVICE
+        uri: http://localhost:8081
+        predicates:
+          - Path=/employee/**
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: http://localhost:8081
+              fallbackuri: forward:/employeeServiceFallBack
+      - id: HR-SERVICE
+        uri: http://localhost:8082
+        predicates:
+          - Path=/hr/**
+        filters:
+          - name: CircuitBreaker
+            args:
+              name: http://localhost:8082
+              fallbackuri: forward:/hrServiceFallBack
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
+# eureka:
+#   client:
+#       register-with-eureka: true
+#       fetch-registry: true
+#       service-url:
+#           defaultZone: http://localhost:8761/eureka/
+#   instance:
+#       hostname: localhost
